@@ -293,7 +293,23 @@
             try {
                 const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, doc, getDoc, setDoc, onSnapshot } = window.firebaseAppModules;
                 
-                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+                let firebaseConfig = {};
+                try {
+                    firebaseConfig = JSON.parse(firebaseConfigStr);
+                } catch (e) {
+                    firebaseConfig = {};
+                }
+
+                // If projectId is missing, fall back gracefully to local storage / offline mode
+                if (!firebaseConfig || !firebaseConfig.projectId) {
+                    console.warn("Firebase config missing projectId. Running in local/offline mode.");
+                    initDaySelector();
+                    updateSyncStatus('Mode Lokal (Offline)', 'bg-yellow-400', 'text-yellow-600');
+                    document.getElementById('userIdDisplay').textContent = 'Local Mode';
+                    return;
+                }
+
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'vocab-workbook-default';
 
                 const app = initializeApp(firebaseConfig);
@@ -343,7 +359,8 @@
 
             } catch (e) {
                 console.error("Initialization error:", e);
-                updateSyncStatus('Gagal Terhubung', 'bg-red-400', 'text-red-600');
+                updateSyncStatus('Mode Lokal (Offline)', 'bg-yellow-400', 'text-yellow-600');
+                document.getElementById('userIdDisplay').textContent = 'Local Mode';
                 initDaySelector();
             }
         });
