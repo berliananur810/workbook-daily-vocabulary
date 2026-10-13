@@ -6,18 +6,6 @@
     <title>Buku Tugas Daily Vocabulary (Oxford 3000)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Expose Firebase modules to global scope for our app logic
-        window.firebaseAppModules = {
-            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged,
-            getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot
-        };
-        window.dispatchEvent(new Event('firebase-loaded'));
-    </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -51,17 +39,17 @@
         <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold tracking-tight">Buku Tugas Latihan Daily Vocab</h1>
-                <p class="text-indigo-200 text-sm mt-1">Oxford 3000 American English • Target 50 Kata / Hari</p>
+                <p class="text-indigo-200 text-sm mt-1">Oxford 3000 American English • Target 50 Kata / Hari (Mode Lokal)</p>
             </div>
             
             <div class="flex flex-wrap items-center gap-3">
                 <div id="syncStatus" class="bg-indigo-800/80 text-indigo-200 text-xs px-3 py-1.5 rounded-lg flex items-center gap-2 border border-indigo-600">
-                    <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" id="syncDot"></span>
-                    <span id="syncText">Menghubungkan ke Cloud...</span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-400" id="syncDot"></span>
+                    <span id="syncText">Tersimpan di Perangkat (Lokal)</span>
                 </div>
-                <button onclick="testCloudConnection()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium px-3 py-2 rounded-lg shadow transition flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    Uji Koneksi
+                <button onclick="exportLocalData()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium px-3 py-2 rounded-lg shadow transition flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Cadangkan Data
                 </button>
                 <button onclick="window.print()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-medium px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
@@ -73,25 +61,6 @@
 
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- Firebase Setup Banner for GitHub Pages -->
-        <div id="firebaseSetupCard" class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 no-print hidden">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h3 class="text-sm font-bold text-amber-900 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                        Perhatian: Konfigurasi Firebase / Firestore Belum Sesuai
-                    </h3>
-                    <p id="setupCardDesc" class="text-xs text-amber-700 mt-0.5">Masukkan konfigurasi Firebase Anda atau periksa aturan keamanan (Firestore Security Rules) agar data dapat tersinkron online.</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="toggleConfigModal()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
-                        Atur Firebase Config
-                    </button>
-                    <button onclick="dismissConfigBanner()" class="text-amber-800 hover:text-amber-950 text-xs px-2 py-1">Tutup</button>
-                </div>
-            </div>
-        </div>
-
         <!-- Controls & Filters -->
         <div class="bg-white rounded-xl shadow-md p-6 mb-8 no-print border border-gray-100">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
@@ -115,12 +84,11 @@
             </div>
             <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-500 gap-2">
                 <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                    <span>ID Perangkat / Sesi Cloud Anda: <strong id="userIdDisplay" class="text-gray-700 select-all font-mono">Menghubungkan...</strong></span>
+                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    <span>Penyimpanan Lokal Browser Aktif (Aman & Otomatis)</span>
                 </div>
-                <button onclick="copyShareLink()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded font-medium transition flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                    Salin Tautan Akses
+                <button onclick="clearLocalData()" class="text-red-500 hover:text-red-700 font-medium transition">
+                    Reset Semua Data Tersimpan
                 </button>
             </div>
         </div>
@@ -131,13 +99,13 @@
                 <div>
                     <span id="dayBadge" class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">HARI 1</span>
                     <h2 id="dayTitle" class="text-2xl font-bold text-gray-900 mt-2">Lembar Latihan Kosakata #1</h2>
-                    <p class="text-sm text-gray-500 mt-0.5">Petunjuk: Tuliskan arti / terjemahan bahasa Indonesia di kolom kosong yang disediakan. Tersimpan otomatis ke cloud.</p>
+                    <p class="text-sm text-gray-500 mt-0.5">Petunjuk: Tuliskan arti / terjemahan bahasa Indonesia di kolom kosong. Progres tersimpan otomatis di perangkat ini.</p>
                 </div>
                 
                 <div class="border border-gray-300 rounded-lg p-3 bg-gray-50 text-xs text-gray-600 w-full md:w-64">
                     <div class="flex justify-between mb-1"><span>Nama:</span> <input type="text" id="inputStudentName" oninput="saveStudentMeta()" placeholder="Ketik nama..." class="bg-transparent border-b border-gray-400 focus:outline-none w-36 px-1"></div>
                     <div class="flex justify-between mb-1"><span>Tanggal:</span> <input type="date" id="inputDate" oninput="saveStudentMeta()" class="bg-transparent border-b border-gray-400 focus:outline-none w-36 px-1 text-xs"></div>
-                    <div class="flex justify-between"><span>Status Cloud:</span> <span id="saveBadge" class="text-emerald-600 font-semibold">Tersinkron</span></div>
+                    <div class="flex justify-between"><span>Status:</span> <span id="saveBadge" class="text-emerald-600 font-semibold">Tersimpan</span></div>
                 </div>
             </div>
 
@@ -173,55 +141,16 @@
 
             <div class="mt-8 pt-4 border-t border-gray-200 text-xs text-gray-400 text-center flex justify-between items-center">
                 <span>Source: Oxford 3000™ American English</span>
-                <span>Lembar Kerja Latihan Mandiri Online</span>
+                <span>Lembar Kerja Latihan Mandiri Lokal</span>
             </div>
         </div>
 
     </main>
 
-    <div id="configModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden no-print">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <h3 class="text-lg font-bold text-gray-900">Konfigurasi Firebase Web</h3>
-            <p class="text-xs text-gray-500">Salin objek konfigurasi dari Firebase Console Anda (<code class="text-indigo-600">Project settings > General > Your apps</code>). Tempelkan format <code class="bg-gray-100 px-1 rounded text-indigo-600">const firebaseConfig = { ... };</code> di bawah ini:</p>
-            
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Firebase Config (JSON / JS Object):</label>
-                <textarea id="inputFirebaseConfig" rows="8" class="w-full font-mono text-xs bg-gray-50 border border-gray-300 rounded-lg p-2.5 focus:ring-indigo-500 focus:border-indigo-500" placeholder='const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "proyek-anda.firebaseapp.com",
-  projectId: "proyek-anda",
-  storageBucket: "proyek-anda.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:12345..."
-};'></textarea>
-            </div>
-            
-            <div id="configErrorBox" class="bg-red-50 border border-red-200 text-red-700 text-xs p-3 rounded-lg hidden">
-                <strong>Format Salah:</strong> <span id="configErrorText">Pastikan ada kunci "projectId" di dalam konfigurasi.</span>
-            </div>
-
-            <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-lg text-xs text-indigo-900 space-y-1.5">
-                <p class="font-bold">💡 Tips Supaya Berhasil Online:</p>
-                <ul class="list-disc list-inside space-y-1 text-[11px] text-indigo-800">
-                    <li>Pastikan menu <strong>Firestore Database</strong> sudah dibuat di Firebase Console.</li>
-                    <li>Pastikan <strong>Firestore Security Rules</strong> mengizinkan akses baca/tulis test mode, misalnya: <br><code class="bg-white px-1 py-0.5 rounded font-mono text-indigo-600">allow read, write: if true;</code></li>
-                </ul>
-            </div>
-
-            <div class="flex justify-between items-center pt-2">
-                <button onclick="clearCustomConfig()" class="text-xs text-red-600 hover:underline font-medium">Reset / Hapus Config</button>
-                <div class="flex gap-2">
-                    <button onclick="toggleConfigModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg">Batal</button>
-                    <button onclick="saveAndApplyFirebaseConfig()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg">Simpan & Hubungkan</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast Notification -->
     <div id="toastNotification" class="fixed bottom-5 right-5 bg-gray-900 text-white text-xs px-4 py-3 rounded-lg shadow-xl transition-all duration-300 transform translate-y-20 opacity-0 z-50 flex items-center gap-2">
         <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-        <span id="toastText">Berhasil disalin!</span>
+        <span id="toastText">Berhasil disimpan!</span>
     </div>
 
     <script>
@@ -333,206 +262,43 @@
         let showHints = false;
         const ITEMS_PER_DAY = 50;
 
-        let db, auth, userId;
         let userAnswers = {}; 
         let studentMeta = { name: "", date: "" };
-        let unsubscribeDoc = null;
-
-        window.addEventListener('firebase-loaded', async () => {
-            initAppWithConfig();
-        });
 
         window.onload = function() {
-            if (!window.firebaseAppModules) {
-                initAppWithConfig();
-            }
+            loadLocalData();
+            initDaySelector();
         };
 
-        async function initAppWithConfig() {
+        function loadLocalData() {
             try {
-                let firebaseConfig = {};
-                
-                if (typeof __firebase_config !== 'undefined') {
-                    try {
-                        firebaseConfig = typeof __firebase_config === 'string' ? JSON.parse(__firebase_config) : __firebase_config;
-                    } catch(e) {}
+                const savedAnswers = localStorage.getItem('vocab_local_answers');
+                if (savedAnswers) {
+                    userAnswers = JSON.parse(savedAnswers);
                 }
-
-                if (!firebaseConfig || !firebaseConfig.projectId) {
-                    const savedConfig = localStorage.getItem('custom_firebase_config');
-                    if (savedConfig) {
-                        try {
-                            firebaseConfig = JSON.parse(savedConfig);
-                        } catch(e) {}
+                const savedMeta = localStorage.getItem('vocab_local_meta');
+                if (savedMeta) {
+                    studentMeta = JSON.parse(savedMeta);
+                    if (studentMeta.name) {
+                        document.getElementById('inputStudentName').value = studentMeta.name;
+                    }
+                    if (studentMeta.date) {
+                        document.getElementById('inputDate').value = studentMeta.date;
                     }
                 }
-
-                if (!firebaseConfig || !firebaseConfig.projectId) {
-                    initDaySelector();
-                    updateSyncStatus('Mode Lokal (Offline)', 'bg-yellow-400', 'text-yellow-600');
-                    document.getElementById('userIdDisplay').textContent = 'Mode Lokal (Tanpa Cloud)';
-                    document.getElementById('setupCardDesc').textContent = 'Belum ada Firebase Config yang tersimpan. Data hanya tersimpan di perangkat ini.';
-                    document.getElementById('firebaseSetupCard').classList.remove('hidden');
-                    return;
-                }
-
-                const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, doc, setDoc, onSnapshot } = window.firebaseAppModules || {};
-                
-                if (!initializeApp) {
-                    initDaySelector();
-                    updateSyncStatus('Mode Lokal', 'bg-yellow-400', 'text-yellow-600');
-                    return;
-                }
-
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'vocab-workbook-default';
-
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                const hash = window.location.hash;
-                if (hash.includes('user=')) {
-                    const match = hash.match(/user=([^&]+)/);
-                    if (match && match[1]) {
-                        userId = match[1];
-                    }
-                }
-
-                if (!userId) {
-                    userId = auth.currentUser?.uid || localStorage.getItem('vocab_user_id') || crypto.randomUUID();
-                    localStorage.setItem('vocab_user_id', userId);
-                }
-
-                document.getElementById('userIdDisplay').textContent = userId;
-                initDaySelector();
-
-                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'vocab_data', 'state');
-                
-                unsubscribeDoc = onSnapshot(docRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        userAnswers = data.answers || {};
-                        if (data.meta) {
-                            studentMeta = data.meta;
-                            if (document.getElementById('inputStudentName').value !== studentMeta.name) {
-                                document.getElementById('inputStudentName').value = studentMeta.name || '';
-                            }
-                            if (document.getElementById('inputDate').value !== studentMeta.date) {
-                                document.getElementById('inputDate').value = studentMeta.date || '';
-                            }
-                        }
-                        updateSyncStatus('Tersinkron di Cloud', 'bg-emerald-400', 'text-emerald-600');
-                        refreshInputsFromState();
-                    } else {
-                        setDoc(docRef, { answers: {}, meta: { name: '', date: '' } }, { merge: true });
-                        updateSyncStatus('Tersinkron di Cloud', 'bg-emerald-400', 'text-emerald-600');
-                    }
-                }, (error) => {
-                    console.error("Firestore sync error:", error);
-                    updateSyncStatus('Izin Ditolak / Aturan DB', 'bg-red-400', 'text-red-600');
-                    document.getElementById('setupCardDesc').textContent = 'Koneksi ke Firestore gagal atau izin ditolak. Periksa "Firestore Security Rules" di Firebase Console Anda.';
-                    document.getElementById('firebaseSetupCard').classList.remove('hidden');
-                });
-
             } catch (e) {
-                console.error("Initialization error:", e);
-                initDaySelector();
-                updateSyncStatus('Gagal Inisialisasi', 'bg-red-400', 'text-red-600');
-                document.getElementById('setupCardDesc').textContent = 'Terjadi kesalahan saat menginisialisasi Firebase. Periksa kembali struktur konfigurasi Anda.';
-                document.getElementById('firebaseSetupCard').classList.remove('hidden');
+                console.error("Error loading local storage:", e);
             }
         }
 
-        async function testCloudConnection() {
-            showToast("Menguji koneksi ke Firestore Database...");
+        function saveLocalData() {
             try {
-                if (!db) {
-                    throw new Error("Database belum terhubung. Periksa konfigurasi Anda.");
-                }
-                const { doc, setDoc, getDoc } = window.firebaseAppModules;
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'vocab-workbook-default';
-                const testRef = doc(db, 'artifacts', appId, 'system', 'ping');
-                
-                await setDoc(testRef, { lastPing: new Date().toISOString() }, { merge: true });
-                const snap = await getDoc(testRef);
-
-                if (snap.exists()) {
-                    showToast("✅ Berhasil! Koneksi Firestore Database normal & siap digunakan.");
-                    document.getElementById('firebaseSetupCard').classList.add('hidden');
-                    updateSyncStatus('Tersinkron di Cloud', 'bg-emerald-400', 'text-emerald-600');
-                } else {
-                    throw new Error("Data test tidak dapat dibaca kembali.");
-                }
-            } catch(err) {
-                console.error("Test connection failed:", err);
-                showToast("❌ Gagal: " + (err.message || "Periksa Security Rules database Anda."));
-                document.getElementById('setupCardDesc').textContent = "Uji koneksi gagal. Penyebab umum: Firestore Security Rules belum diatur ke 'test mode' atau diblokir.";
-                document.getElementById('firebaseSetupCard').classList.remove('hidden');
-            }
-        }
-
-        function toggleConfigModal() {
-            const modal = document.getElementById('configModal');
-            modal.classList.toggle('hidden');
-        }
-
-        function dismissConfigBanner() {
-            document.getElementById('firebaseSetupCard').classList.add('hidden');
-        }
-
-        function saveAndApplyFirebaseConfig() {
-            let rawText = document.getElementById('inputFirebaseConfig').value.trim();
-            const errorBox = document.getElementById('configErrorBox');
-            const errorText = document.getElementById('configErrorText');
-            
-            errorBox.classList.add('hidden');
-
-            try {
-                rawText = rawText.replace(/^(const|let|var)\s+[a-zA-Z0-9_$]+\s*=\s*/, '');
-                rawText = rawText.replace(/;\s*$/, '');
-
-                let parsed;
-                try {
-                    parsed = JSON.parse(rawText);
-                } catch(err1) {
-                    try {
-                        parsed = eval('(' + rawText + ')');
-                    } catch(err2) {
-                        throw new Error("Gagal membaca struktur objek. Pastikan menyalin kurung kurawal { ... } dengan benar.");
-                    }
-                }
-
-                if (!parsed || typeof parsed !== 'object') {
-                    throw new Error("Konfigurasi bukan berupa objek JavaScript yang valid.");
-                }
-
-                if (!parsed.projectId) {
-                    throw new Error('Properti "projectId" tidak ditemukan di dalam konfigurasi Firebase Anda.');
-                }
-
-                localStorage.setItem('custom_firebase_config', JSON.stringify(parsed));
-                toggleConfigModal();
-                showToast("Konfigurasi tersimpan! Memuat ulang...");
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } catch(e) {
-                console.error("Config parse error:", e);
-                errorText.textContent = e.message || "Format konfigurasi salah. Periksa kembali.";
-                errorBox.classList.remove('hidden');
-            }
-        }
-
-        function clearCustomConfig() {
-            if (confirm("Hapus konfigurasi kustom yang tersimpan?")) {
-                localStorage.removeItem('custom_firebase_config');
-                window.location.reload();
+                localStorage.setItem('vocab_local_answers', JSON.stringify(userAnswers));
+                localStorage.setItem('vocab_local_meta', JSON.stringify(studentMeta));
+                updateSaveStatus('Tersimpan', 'text-emerald-600');
+            } catch (e) {
+                console.error("Error saving local storage:", e);
+                updateSaveStatus('Gagal Menyimpan', 'text-red-600');
             }
         }
 
@@ -594,103 +360,65 @@
             }
         }
 
-        function refreshInputsFromState() {
-            const inputs = document.querySelectorAll('.vocab-input');
-            inputs.forEach(input => {
-                const idx = input.getAttribute('data-index');
-                const val = userAnswers[`item_${idx}`] || '';
-                if (input.value !== val) {
-                    input.value = val;
-                }
-            });
-        }
-
         let saveTimeout = null;
         function handleAnswerInput(globalIndex, value) {
             userAnswers[`item_${globalIndex}`] = value;
-            updateSyncStatus('Menyimpan...', 'bg-yellow-400', 'text-amber-600');
+            updateSaveStatus('Menyimpan...', 'text-amber-600');
 
             if (saveTimeout) clearTimeout(saveTimeout);
             saveTimeout = setTimeout(() => {
-                syncToCloud();
-            }, 800);
+                saveLocalData();
+                showToast("Progres tersimpan di perangkat");
+            }, 600);
         }
 
         function saveStudentMeta() {
             studentMeta.name = document.getElementById('inputStudentName').value;
             studentMeta.date = document.getElementById('inputDate').value;
-            updateSyncStatus('Menyimpan...', 'bg-yellow-400', 'text-amber-600');
+            updateSaveStatus('Menyimpan...', 'text-amber-600');
 
             if (saveTimeout) clearTimeout(saveTimeout);
             saveTimeout = setTimeout(() => {
-                syncToCloud();
-            }, 800);
+                saveLocalData();
+            }, 600);
         }
 
-        async function syncToCloud() {
-            if (!db || !auth || !userId) return;
-            try {
-                const { doc, setDoc } = window.firebaseAppModules;
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'vocab-workbook-default';
-                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'vocab_data', 'state');
-                
-                await setDoc(docRef, {
-                    answers: userAnswers,
-                    meta: studentMeta,
-                    updatedAt: new Date().toISOString()
-                }, { merge: true });
-
-                updateSyncStatus('Tersinkron di Cloud', 'bg-emerald-400', 'text-emerald-600');
-            } catch (err) {
-                console.error("Cloud save failed:", err);
-                updateSyncStatus('Gagal Menyimpan', 'bg-red-400', 'text-red-600');
-            }
-        }
-
-        function updateSyncStatus(text, dotClass, textClass) {
-            const dot = document.getElementById('syncDot');
-            const txt = document.getElementById('syncText');
+        function updateSaveStatus(text, textColorClass) {
             const badge = document.getElementById('saveBadge');
-            
-            if (dot) {
-                dot.className = `w-2 h-2 rounded-full ${dotClass}`;
-            }
-            if (txt) {
-                txt.textContent = text;
-            }
             if (badge) {
-                badge.textContent = text.includes('Tersinkron') ? 'Tersinkron' : 'Menyimpan...';
-                badge.className = text.includes('Tersinkron') ? 'text-emerald-600 font-semibold' : 'text-amber-600 font-semibold';
+                badge.textContent = text;
+                badge.className = `${textColorClass} font-semibold`;
             }
         }
 
-        function copyShareLink() {
-            const currentUrl = window.location.href.split('#')[0];
-            const shareText = `${currentUrl}#user=${userId}`;
-            
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(shareText).then(() => {
-                    showToast("Tautan berhasil disalin! Buka di device lain.");
-                }).catch(() => {
-                    fallbackCopy(shareText);
-                });
-            } else {
-                fallbackCopy(shareText);
-            }
+        function exportLocalData() {
+            const dataToExport = {
+                answers: userAnswers,
+                meta: studentMeta,
+                exportedAt: new Date().toISOString()
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `vocab_backup_${studentMeta.name || 'user'}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast("File cadangan berhasil diunduh!");
         }
 
-        function fallbackCopy(text) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                showToast("Tautan berhasil disalin!");
-            } catch (err) {
-                showToast("Gagal menyalin tautan.");
+        function clearLocalData() {
+            if (confirm("Apakah Anda yakin ingin menghapus semua jawaban yang tersimpan?")) {
+                localStorage.removeItem('vocab_local_answers');
+                localStorage.removeItem('vocab_local_meta');
+                userAnswers = {};
+                studentMeta = { name: "", date: "" };
+                document.getElementById('inputStudentName').value = '';
+                document.getElementById('inputDate').value = '';
+                const currentDay = parseInt(document.getElementById('daySelect').value);
+                renderWorksheet(currentDay);
+                showToast("Semua data berhasil direset.");
             }
-            document.body.removeChild(textArea);
         }
 
         function showToast(message) {
